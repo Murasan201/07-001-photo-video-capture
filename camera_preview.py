@@ -28,11 +28,21 @@ except ImportError:
 class CameraPreview:
     """カメラプレビュークラス"""
     
-    def __init__(self, use_picamera=True):
-        """初期化"""
+    def __init__(self, use_picamera=True, flip_horizontal=False, flip_vertical=False, rotate_180=False):
+        """初期化
+        
+        Args:
+            use_picamera: Picamera2を使用するかどうか
+            flip_horizontal: 水平反転するかどうか
+            flip_vertical: 垂直反転するかどうか
+            rotate_180: 180度回転するかどうか（逆さま設置用）
+        """
         self.camera = None
         self.use_picamera = use_picamera and PICAMERA_AVAILABLE
         self.running = False
+        self.flip_horizontal = flip_horizontal
+        self.flip_vertical = flip_vertical
+        self.rotate_180 = rotate_180
         
         # シグナルハンドラー設定
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -80,6 +90,9 @@ class CameraPreview:
                 
                 # RGB888からBGRに変換（OpenCV用）
                 frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                
+                # 映像の反転・回転処理
+                frame_bgr = self._apply_transformations(frame_bgr)
                 
                 # FPS計算と表示
                 frame_count += 1
@@ -160,6 +173,9 @@ class CameraPreview:
                     print("フレーム取得エラー")
                     break
                 
+                # 映像の反転・回転処理
+                frame = self._apply_transformations(frame)
+                
                 # FPS計算と表示
                 frame_count += 1
                 if frame_count % 30 == 0:
@@ -198,6 +214,29 @@ class CameraPreview:
         finally:
             self._cleanup()
     
+    def _apply_transformations(self, frame):
+        """映像の反転・回転処理を適用
+        
+        Args:
+            frame: 入力フレーム
+            
+        Returns:
+            変換後のフレーム
+        """
+        # 180度回転（逆さま設置対応）
+        if self.rotate_180:
+            frame = cv2.rotate(frame, cv2.ROTATE_180)
+        
+        # 水平反転（左右反転）
+        if self.flip_horizontal:
+            frame = cv2.flip(frame, 1)
+        
+        # 垂直反転（上下反転）
+        if self.flip_vertical:
+            frame = cv2.flip(frame, 0)
+        
+        return frame
+    
     def _cleanup(self):
         """クリーンアップ処理"""
         if self.use_picamera and self.camera:
@@ -234,8 +273,11 @@ def main():
         print("Picamera2またはOpenCVをインストールしてください")
         sys.exit(1)
     
-    # 引数でライブラリを選択可能
+    # コマンドライン引数解析
     use_opencv = '--opencv' in sys.argv or '--use-opencv' in sys.argv
+    flip_horizontal = '--flip-h' in sys.argv or '--flip-horizontal' in sys.argv
+    flip_vertical = '--flip-v' in sys.argv or '--flip-vertical' in sys.argv
+    rotate_180 = '--rotate-180' in sys.argv or '--upside-down' in sys.argv
     
     if use_opencv and not OPENCV_AVAILABLE:
         print("エラー: OpenCVがインストールされていません")
@@ -245,8 +287,61 @@ def main():
     if not PICAMERA_AVAILABLE:
         use_opencv = True
     
+    # ヘルプ表示
+    if '--help' in sys.argv or '-h' in sys.argv:
+        print("""
+カメラプレビューアプリ - 使用方法
+
+基本実行:
+  python3 camera_preview.py
+
+オプション:
+  --opencv, --use-opencv    OpenCVバックエンドを使用（USBカメラ用）
+  --flip-h, --flip-horizontal  水平反転（左右反転）
+  --flip-v, --flip-vertical    垂直反転（上下反転）
+  --rotate-180, --upside-down  180度回転（逆さま設置用）
+  --help, -h                   このヘルプを表示
+
+使用例:
+  # 基本実行
+  export DISPLAY=:0
+  python3 camera_preview.py
+  
+  # 逆さま設置のカメラ用（推奨）
+  python3 camera_preview.py --rotate-180
+  
+  # 水平反転
+  python3 camera_preview.py --flip-h
+  
+  # 複数の変換を組み合わせ
+  python3 camera_preview.py --rotate-180 --flip-h
+
+操作:
+  Q キー         - 終了
+  × ボタン       - 終了
+        """)
+        sys.exit(0)
+    
     try:
-        preview = CameraPreview(use_picamera=not use_opencv)
+        preview = CameraPreview(
+            use_picamera=not use_opencv,
+            flip_horizontal=flip_horizontal,
+            flip_vertical=flip_vertical,
+            rotate_180=rotate_180
+        )
+        
+        # 適用された変換を表示
+        transforms = []
+        if rotate_180:
+            transforms.append("180度回転")
+        if flip_horizontal:
+            transforms.append("水平反転")
+        if flip_vertical:
+            transforms.append("垂直反転")
+        
+        if transforms:
+            print(f"適用された変換: {', '.join(transforms)}")
+        
         preview.start()
     except KeyboardInterrupt:
         print("\n終了します...")
