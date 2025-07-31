@@ -6,6 +6,8 @@ A Python application for capturing photos and recording videos using Raspberry P
 
 - **Dual Camera Support**: Compatible with both Raspberry Pi camera modules and USB webcams
 - **Multiple Formats**: Support for JPEG/PNG photos and MP4 videos
+- **Real-time Preview**: Live camera preview with transformations and FPS display
+- **Image Transformations**: Support for rotation and flipping (perfect for upside-down mounted cameras)
 - **Flexible Resolution**: Configurable width and height for both photos and videos
 - **Command Line Interface**: Easy-to-use CLI with comprehensive options
 - **Automatic Timestamping**: Files are automatically named with timestamps
@@ -79,6 +81,31 @@ python3 photo_video_capture.py video --width 1920 --height 1080 --fps 24 --durat
 python3 photo_video_capture.py video --output ./my_videos --duration 5
 ```
 
+#### Camera Preview (Real-time Display)
+```bash
+# Basic camera preview
+export DISPLAY=:0
+python3 camera_preview.py
+
+# Camera preview with image transformations (for upside-down mounted cameras)
+python3 camera_preview.py --rotate-180
+
+# Horizontal flip (mirror effect)
+python3 camera_preview.py --flip-h
+
+# Vertical flip
+python3 camera_preview.py --flip-v
+
+# Combine multiple transformations
+python3 camera_preview.py --rotate-180 --flip-h
+
+# Use OpenCV backend for USB cameras
+python3 camera_preview.py --use-opencv
+
+# Show help for camera preview options
+python3 camera_preview.py --help
+```
+
 #### Force OpenCV Usage
 ```bash
 # Use OpenCV instead of Picamera2 (useful for USB cameras)
@@ -102,6 +129,15 @@ python3 photo_video_capture.py video --use-opencv
 - `--height HEIGHT`: Video height in pixels (default: 720)
 - `--fps FPS`: Frame rate (default: 30)
 - `--duration SECONDS`: Recording duration in seconds (default: 10)
+
+#### Camera Preview Options
+- `--opencv, --use-opencv`: Use OpenCV backend instead of Picamera2 (useful for USB cameras)
+- `--flip-h, --flip-horizontal`: Flip image horizontally (mirror effect)
+- `--flip-v, --flip-vertical`: Flip image vertically (upside-down)
+- `--rotate-180, --upside-down`: Rotate image 180 degrees (for upside-down mounted cameras)
+- `--help, -h`: Show help message with all available options
+
+**Note**: Multiple transformation options can be combined. For example, use `--rotate-180 --flip-h` to both rotate and mirror the image.
 
 ### File Naming Convention
 
@@ -191,6 +227,18 @@ Error: No space left on device
 1. Reduce resolution: `--width 640 --height 480`
 2. Lower frame rate: `--fps 15`
 3. Shorten recording duration: `--duration 5`
+
+#### Camera Preview Issues
+**If preview appears upside-down or mirrored:**
+1. Use `--rotate-180` for upside-down mounted cameras
+2. Use `--flip-h` for horizontal mirroring
+3. Use `--flip-v` for vertical flipping
+4. Combine options: `--rotate-180 --flip-h`
+
+**If preview window doesn't appear:**
+1. Set display: `export DISPLAY=:0`
+2. Install system OpenCV: `sudo apt install python3-opencv`
+3. Check if running over SSH without X11 forwarding
 
 ### Getting Help
 
