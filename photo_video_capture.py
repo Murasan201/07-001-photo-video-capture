@@ -21,7 +21,9 @@ try:
     from picamera2.encoders import H264Encoder
     from picamera2.outputs import FileOutput
     PICAMERA_AVAILABLE = True
-except ImportError:
+except (ImportError, ValueError) as e:
+    # ImportErrorまたはnumpy互換性エラーをキャッチ
+    print(f"Picamera2利用不可: {e}")
     PICAMERA_AVAILABLE = False
 
 try:
@@ -115,6 +117,9 @@ class PhotoVideoCapture:
                 if not self.camera.isOpened():
                     return False
                 
+                # カメラの初期化を待つ
+                time.sleep(2)
+                
                 # 解像度設定
                 self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
                 self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -163,10 +168,16 @@ class PhotoVideoCapture:
                 if not self.initialize_camera(width, height):
                     return None
                 
-                # フレーム取得
-                ret, frame = self.camera.read()
+                # フレーム取得（複数回試行）
+                ret, frame = False, None
+                for attempt in range(5):
+                    ret, frame = self.camera.read()
+                    if ret:
+                        break
+                    time.sleep(0.5)
+                
                 if not ret:
-                    print("フレーム取得失敗")
+                    print("フレーム取得失敗（5回試行）")
                     return None
                 
                 # ファイル保存
