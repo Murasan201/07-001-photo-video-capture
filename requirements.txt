@@ -1,1 +1,6 @@
-opencv-python
+# Python dependencies for Photo/Video Capture Application
+# Note: Picamera2 should be installed via apt, not pip
+# sudo apt install python3-picamera2
+
+# Optional: For development/testing
+# opencv-python  # Not needed for current scripts

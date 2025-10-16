@@ -1,30 +1,28 @@
 # Photo/Video Capture Application
 
-A Python application for capturing photos and recording videos using Raspberry Pi camera modules or USB cameras. This application supports both Picamera2 and OpenCV backends for maximum compatibility.
+Simple Python scripts for capturing photos and recording videos using Raspberry Pi camera modules. These lightweight scripts are designed for educational purposes and easy understanding.
 
 ## Features
 
-- **Dual Camera Support**: Compatible with both Raspberry Pi camera modules and USB webcams
-- **Multiple Formats**: Support for JPEG/PNG photos and MP4 videos
-- **Real-time Preview**: Live camera preview with transformations and FPS display
-- **Image Transformations**: Support for rotation and flipping (perfect for upside-down mounted cameras)
-- **Flexible Resolution**: Configurable width and height for both photos and videos
-- **Command Line Interface**: Easy-to-use CLI with comprehensive options
-- **Automatic Timestamping**: Files are automatically named with timestamps
+- **Photo Capture**: Quick photo capture with Picamera2
+- **Video Recording**: 10-second video recording with H.264 encoding and MP4 conversion
+- **Preview Support**: Automatic preview display when available (desktop environment)
+- **Headless Operation**: Works without display for SSH/remote usage
 - **Error Handling**: Robust error handling with informative messages
-- **Resource Management**: Proper camera resource cleanup
 
 ## System Requirements
 
 ### Hardware
-- Raspberry Pi 5 (recommended)
-- Raspberry Pi Camera Module v2 or compatible USB webcam
+- Raspberry Pi 5 (recommended) or Raspberry Pi 4
+- Raspberry Pi Camera Module v2, v3, or HQ Camera
 - microSD card with Raspberry Pi OS
 - 5V power adapter
 
 ### Software
 - Raspberry Pi OS (latest recommended)
 - Python 3.9 or higher
+- Picamera2 library
+- FFmpeg (for video conversion)
 
 ## Installation
 
@@ -36,116 +34,98 @@ cd 07-001-photo-video-capture
 
 ### 2. Install Dependencies
 
-For Raspberry Pi camera module (Picamera2):
+Update system and install required packages:
 ```bash
 sudo apt update
-sudo apt install python3-picamera2
+sudo apt install -y python3-picamera2 ffmpeg
 ```
 
-For USB cameras (OpenCV):
-```bash
-pip3 install opencv-python
-```
-
-### 3. Enable Camera Interface (for Pi Camera)
+### 3. Enable Camera Interface
 ```bash
 sudo raspi-config
 # Navigate to Interface Options > Camera > Enable
+# Reboot after enabling
+sudo reboot
 ```
 
 ## Usage
 
-### Basic Commands
+### Photo Capture Script (`photo_capture.py`)
 
-#### Photo Capture
+Captures a single photo and saves it as JPEG:
+
 ```bash
-# Capture a photo with default settings (1920x1080, JPEG)
-python3 photo_video_capture.py photo
+# Basic usage - captures a photo
+python3 photo_capture.py
 
-# Capture with custom resolution and format
-python3 photo_video_capture.py photo --width 2560 --height 1440 --format png
-
-# Specify output directory
-python3 photo_video_capture.py photo --output ./my_photos
+# Output: photo_[timestamp].jpg (e.g., photo_20251016_143052.jpg)
 ```
 
-#### Video Recording
+**Features:**
+- Resolution: 1920x1080 (Full HD)
+- Format: JPEG
+- Auto-timestamped filename
+- Automatic camera resource cleanup
+
+### Video Recording Script (`video_capture.py`)
+
+Records a 10-second video and saves it as MP4:
+
 ```bash
-# Record video with default settings (1280x720, 30fps, 10 seconds)
-python3 photo_video_capture.py video
+# Basic usage - records 10 seconds of video
+python3 video_capture.py
 
-# Record with custom settings
-python3 photo_video_capture.py video --width 1920 --height 1080 --fps 24 --duration 30
-
-# Specify output directory
-python3 photo_video_capture.py video --output ./my_videos --duration 5
+# Output: test_video.mp4
 ```
 
-#### Camera Preview (Real-time Display)
+**Features:**
+- Resolution: 1920x1080 (Full HD)
+- Duration: 10 seconds
+- Format: H.264 encoded, converted to MP4
+- Bitrate: 10 Mbps
+- Preview: Automatic when display is available
+- Headless: Works without display via SSH
+
+### Running in Different Environments
+
+#### Desktop Environment (with display)
 ```bash
-# Basic camera preview
+# Preview will be shown automatically
+python3 photo_capture.py
+python3 video_capture.py
+```
+
+#### SSH/Remote Access (headless)
+```bash
+# Works without display - no preview
+python3 photo_capture.py
+python3 video_capture.py
+```
+
+#### Force display environment
+```bash
+# If display exists but not detected
 export DISPLAY=:0
-python3 camera_preview.py
-
-# Camera preview with image transformations (for upside-down mounted cameras)
-python3 camera_preview.py --rotate-180
-
-# Horizontal flip (mirror effect)
-python3 camera_preview.py --flip-h
-
-# Vertical flip
-python3 camera_preview.py --flip-v
-
-# Combine multiple transformations
-python3 camera_preview.py --rotate-180 --flip-h
-
-# Use OpenCV backend for USB cameras
-python3 camera_preview.py --use-opencv
-
-# Show help for camera preview options
-python3 camera_preview.py --help
+python3 video_capture.py
 ```
 
-#### Force OpenCV Usage
-```bash
-# Use OpenCV instead of Picamera2 (useful for USB cameras)
-python3 photo_video_capture.py photo --use-opencv
-python3 photo_video_capture.py video --use-opencv
+## File Structure
+
+```
+07-001-photo-video-capture/
+├── photo_capture.py      # Photo capture script
+├── video_capture.py      # Video recording script
+├── README.md            # This documentation
+├── requirements.txt     # Python dependencies
+├── LICENSE             # MIT License
+├── CLAUDE.md           # Project rules (Japanese)
+└── 07-001_写真動画キャプチャアプリ_要件定義書.md  # Requirements (Japanese)
 ```
 
-### Command Line Options
+## Output Files
 
-#### Common Options
-- `--output DIR`: Specify output directory (default: current directory)
-- `--use-opencv`: Force OpenCV usage instead of Picamera2
-
-#### Photo Options
-- `--width WIDTH`: Image width in pixels (default: 1920)
-- `--height HEIGHT`: Image height in pixels (default: 1080)
-- `--format FORMAT`: File format - jpg or png (default: jpg)
-
-#### Video Options
-- `--width WIDTH`: Video width in pixels (default: 1280)
-- `--height HEIGHT`: Video height in pixels (default: 720)
-- `--fps FPS`: Frame rate (default: 30)
-- `--duration SECONDS`: Recording duration in seconds (default: 10)
-
-#### Camera Preview Options
-- `--opencv, --use-opencv`: Use OpenCV backend instead of Picamera2 (useful for USB cameras)
-- `--flip-h, --flip-horizontal`: Flip image horizontally (mirror effect)
-- `--flip-v, --flip-vertical`: Flip image vertically (upside-down)
-- `--rotate-180, --upside-down`: Rotate image 180 degrees (for upside-down mounted cameras)
-- `--help, -h`: Show help message with all available options
-
-**Note**: Multiple transformation options can be combined. For example, use `--rotate-180 --flip-h` to both rotate and mirror the image.
-
-### File Naming Convention
-
-Files are automatically named with timestamps:
-- Photos: `photo_YYYYMMDD_HHMMSS.{format}`
-- Videos: `video_YYYYMMDD_HHMMSS.mp4`
-
-Example: `photo_20250717_143052.jpg`
+- **Photos**: `photo_YYYYMMDD_HHMMSS.jpg`
+- **Videos**: `test_video.mp4` (fixed name for simplicity)
 
 ## Safety and Security Considerations
 
@@ -154,108 +134,86 @@ Example: `photo_20250717_143052.jpg`
 ### Camera Privacy
 - Always be aware of what you are recording
 - Respect privacy laws and regulations in your area
-- Inform subjects when recording in public spaces
-- Store recordings securely and delete unnecessary files
+- Inform subjects when recording
+- Store recordings securely
 
 ### Hardware Safety
-- Ensure proper power supply to prevent data corruption
-- Handle camera modules with care to avoid damage
-- Keep the camera lens clean and protected
-- Avoid exposing the camera to extreme temperatures or humidity
+- Ensure proper power supply to prevent corruption
+- Handle camera modules with care
+- Keep the camera lens clean
+- Avoid extreme temperatures or humidity
 
 ### Data Security
 - Regularly backup important recordings
-- Use appropriate file permissions to protect sensitive content
-- Consider encryption for sensitive recordings
-- Be mindful of storage capacity limitations
-
-### System Security
-- Keep your Raspberry Pi OS updated
-- Use strong passwords for system access
-- Limit network access if not required
-- Monitor system resources during recording
+- Use appropriate file permissions
+- Monitor storage capacity
+- Delete unnecessary files
 
 ## Troubleshooting
 
-### Common Issues
+### Common Issues and Solutions
 
 #### Camera Not Detected
 ```
 Error: Camera not detected
 ```
 **Solutions:**
-1. Check camera connection to Raspberry Pi
+1. Check camera cable connection
 2. Enable camera interface: `sudo raspi-config`
-3. Restart the system: `sudo reboot`
-4. Try using `--use-opencv` flag for USB cameras
+3. Restart: `sudo reboot`
+4. Check with: `libcamera-hello`
 
 #### Permission Denied
 ```
-Error: Permission denied when accessing camera
+Error: Permission denied
 ```
 **Solutions:**
 1. Add user to video group: `sudo usermod -a -G video $USER`
-2. Check camera isn't being used by another process
-3. Restart and try again
+2. Log out and log back in
+3. Check camera isn't in use by another process
 
-#### Library Import Errors
+#### Qt Display Error (SSH)
 ```
-Error: No available camera libraries
+qt.qpa.xcb: could not connect to display
 ```
-**Solutions:**
-1. Install Picamera2: `sudo apt install python3-picamera2`
-2. Install OpenCV: `pip3 install opencv-python`
-3. Check Python version compatibility (3.9+)
+**Solution:**
+This is normal when running via SSH. The script automatically detects this and runs without preview.
+
+#### FFmpeg Not Found
+```
+Error: ffmpeg command not found
+```
+**Solution:**
+Install FFmpeg: `sudo apt install -y ffmpeg`
 
 #### Storage Space Issues
 ```
 Error: No space left on device
 ```
 **Solutions:**
-1. Check available space: `df -h`
-2. Clean up old recordings: `rm old_videos/*.mp4`
-3. Change output directory to external storage
-
-#### Recording Quality Issues
-**For poor video quality:**
-1. Increase resolution: `--width 1920 --height 1080`
-2. Adjust frame rate: `--fps 24`
-3. Ensure adequate lighting
-4. Clean camera lens
-
-**For large file sizes:**
-1. Reduce resolution: `--width 640 --height 480`
-2. Lower frame rate: `--fps 15`
-3. Shorten recording duration: `--duration 5`
-
-#### Camera Preview Issues
-**If preview appears upside-down or mirrored:**
-1. Use `--rotate-180` for upside-down mounted cameras
-2. Use `--flip-h` for horizontal mirroring
-3. Use `--flip-v` for vertical flipping
-4. Combine options: `--rotate-180 --flip-h`
-
-**If preview window doesn't appear:**
-1. Set display: `export DISPLAY=:0`
-2. Install system OpenCV: `sudo apt install python3-opencv`
-3. Check if running over SSH without X11 forwarding
-
-### Getting Help
-
-If you encounter issues not covered here:
-
-1. Check the application logs for detailed error messages
-2. Verify your hardware setup matches the requirements
-3. Test with minimal settings first
-4. Consult the Raspberry Pi camera documentation
+1. Check space: `df -h`
+2. Clean old files: `rm *.jpg *.mp4 *.h264`
+3. Use external storage
 
 ### Performance Tips
 
-- Use lower resolutions for longer recordings
-- Ensure sufficient storage space before recording
-- Close unnecessary applications during video recording
+- Ensure sufficient storage before recording
 - Use a fast microSD card (Class 10 or higher)
-- Keep the system cool during extended recording sessions
+- Close unnecessary applications
+- Keep system cool during extended use
+
+## Technical Details
+
+### Photo Capture (`photo_capture.py`)
+- Uses Picamera2 library
+- Captures at main stream resolution
+- JPEG format with automatic quality
+
+### Video Recording (`video_capture.py`)
+- H.264 hardware encoding via Picamera2
+- 10 Mbps bitrate for good quality
+- FFmpeg conversion to MP4 container
+- Automatic cleanup of temporary H.264 file
 
 ## License
 
@@ -263,15 +221,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contributing
 
-This project is designed as an educational tool for learning Raspberry Pi camera programming. Contributions are welcome!
+This project is designed as an educational tool for learning Raspberry Pi camera programming. Contributions and improvements are welcome!
 
-## Documentation
+## Additional Documentation
 
 - [Requirements Document](./07-001_写真動画キャプチャアプリ_要件定義書.md) (Japanese)
 - [Project Rules](./CLAUDE.md) (Japanese)
 
+## Support
+
+For issues or questions:
+1. Check the troubleshooting section
+2. Review the error messages carefully
+3. Ensure all dependencies are installed
+4. Verify hardware connections
+
 ---
 
 **Document ID:** 07-001  
-**Last Updated:** 2025-07-17  
-**Target Audience:** Programming beginners, Raspberry Pi learners, Image/Video processing beginners
+**Last Updated:** 2025-10-16  
+**Target Audience:** Programming beginners, Raspberry Pi learners, Camera module users
