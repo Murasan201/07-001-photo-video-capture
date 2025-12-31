@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-動画キャプチャアプリ
-Raspberry Piに接続されたカメラで動画を録画するPythonアプリケーション
-要件定義書: 07-001_写真動画キャプチャアプリ_要件定義書.md
-"""
-
 # 標準ライブラリ
 import time
 import os
